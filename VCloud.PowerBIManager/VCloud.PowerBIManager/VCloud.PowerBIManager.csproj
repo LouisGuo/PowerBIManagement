@@ -32,6 +32,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>ico.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.IdentityModel.Clients.ActiveDirectory, Version=2.22.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.IdentityModel.Clients.ActiveDirectory.2.22.302111727\lib\net45\Microsoft.IdentityModel.Clients.ActiveDirectory.dll</HintPath>
@@ -136,6 +139,13 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Dll\Microsoft.IdentityModel.Clients.ActiveDirectory.dll" />
+    <EmbeddedResource Include="Dll\Microsoft.IdentityModel.Clients.ActiveDirectory.WindowsForms.dll" />
+    <EmbeddedResource Include="Dll\Microsoft.PowerBI.Api.dll" />
+    <EmbeddedResource Include="Dll\Microsoft.PowerBI.Core.dll" />
+    <EmbeddedResource Include="Dll\Microsoft.Rest.ClientRuntime.dll" />
+    <EmbeddedResource Include="Dll\Newtonsoft.Json.dll" />
+    <EmbeddedResource Include="Dll\System.IdentityModel.Tokens.Jwt.dll" />
     <Content Include="ico.ico" />
     <Content Include="office365.png" />
     <EmbeddedResource Include="View\ReportViewer.html" />
