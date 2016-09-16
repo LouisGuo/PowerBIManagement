@@ -1,0 +1,44 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE11" />
+    <meta http-equiv="X-Frame-Options" content="deny">
+    <title></title>
+    <style>
+        body, div {
+            margin: 0;
+            padding: 0;
+        }
+
+        .main {
+            width: 98%;
+            position: absolute;
+            top: 10px;
+            bottom: 10px;
+            left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main">
+        <iframe id="ifrTile" width="100%" height="100%"></iframe>
+    </div>
+    <script>
+        (function () {
+            var iframe = document.getElementById('ifrTile');
+            iframe.src = 'https://embedded.powerbi.com/appTokenReportEmbed?reportId={2027efc6-a308-4632-a775-b9a9186f087c}';
+            iframe.onload = function () {
+                var msgJson = {
+                    action: "loadReport",
+                    accessToken: "{AB4DD0C7-C87D-46D4-A787-921C470D27B9}",
+                    height: 500,
+                    width: 722
+                };
+                var msgTxt = JSON.stringify(msgJson);
+                iframe.contentWindow.postMessage(msgTxt, "*");
+            };
+        }());
+    </script>
+</body>
+</html>
