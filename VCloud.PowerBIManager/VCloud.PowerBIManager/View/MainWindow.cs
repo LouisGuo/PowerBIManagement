@@ -9,21 +9,63 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Newtonsoft.Json;
 
 namespace VCloud.PowerBIManager
 {
+
+
     public partial class MainWindow : Form
     {
+        private const Int32 MINSize = 25;
+
         private readonly List<ComboBox> workspaceComboBoxs;
+
+        private Int32 split1Right = 0;
+        private Int32 split2Left = 0;
+        private Int32 split2Top = 0;
 
         public MainWindow()
         {
             InitializeComponent();
             this.ShowPanel(true);
+            this.EnableSplitContainer(false);
             this.workspaceComboBoxs = new List<ComboBox>
             {
                 comboBox2, comboBox3, comboBox5, comboBox7
             };
+            this.splitContainer1.Panel1MinSize = MINSize;
+            this.splitContainer1.Panel2MinSize = MINSize;
+            this.splitContainer2.Panel1MinSize = MINSize;
+            this.splitContainer2.Panel2MinSize = MINSize;
+
+            try
+            {
+
+                var convertor = new List<Newtonsoft.Json.JsonConverter>
+                {
+                    new MyConvertor()
+                };
+            }
+            catch (Exception ex)
+            {
+
+                this.AppendLog("MyConvertor \n" + ex.ToString());
+            }
+
+            try
+            {
+
+                var convertor = new List<Newtonsoft.Json.JsonConverter>
+                {
+                    new Microsoft.Rest.Serialization.Iso8601TimeSpanConverter()
+                };
+            }
+            catch (Exception ex)
+            {
+
+                this.AppendLog("Microsoft.Rest.Serialization.Iso8601TimeSpanConverter \n" + ex.ToString());
+            }
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -238,7 +280,7 @@ namespace VCloud.PowerBIManager
 
         private void AppendLog(String message)
         {
-            message += "\n\n\n\n";
+            message = "\n\n" + message + "\n\n";
             this.richTextBox2.UIThread(() =>
             {
                 this.richTextBox2.AppendText(message);
@@ -314,6 +356,15 @@ namespace VCloud.PowerBIManager
             });
         }
 
+        private void EnableSplitContainer(Boolean enable)
+        {
+            this.UIThread(() =>
+            {
+                this.splitContainer1.Panel1.Enabled = enable;
+                this.splitContainer2.Panel1.Enabled = enable;
+            });
+        }
+
         private void LoadWorkspaceCollectionDetail()
         {
             var currentCollection = GetCurrentCollection();
@@ -323,8 +374,8 @@ namespace VCloud.PowerBIManager
                 {
                     this.label16.Text = currentCollection.Name;
                     this.richTextBox_WorkspaceCollection.Text = "...";
-                    this.splitContainer1.Enabled = false;
                 });
+                this.EnableSplitContainer(false);
                 try
                 {
                     var powerBIManager = new PowerBIManager(currentCollection);
@@ -334,8 +385,8 @@ namespace VCloud.PowerBIManager
                     this.UIThread(() =>
                     {
                         this.richTextBox_WorkspaceCollection.Text = str;
-                        this.splitContainer1.Enabled = true;
                     });
+                    this.EnableSplitContainer(true);
                     var source = new BindingSource();
                     source.DataSource = collection.Workspaces;
                     foreach (var combo in workspaceComboBoxs)
@@ -450,6 +501,89 @@ namespace VCloud.PowerBIManager
             {
                 this.AppendLog(String.Format("Error: office 365 login exception happend, details: {0}", ex));
             }
+        }
+
+        private void ResizeLogRichTextBox()
+        {
+            try
+            {
+                if (this.splitContainer1.SplitterDistance == this.splitContainer1.Panel1MinSize
+                    && this.splitContainer2.SplitterDistance == this.splitContainer2.Panel1MinSize)
+                {
+                    this.splitContainer1.SplitterDistance = split2Left;
+                    this.splitContainer2.SplitterDistance = split2Top;
+                }
+                else
+                {
+                    split2Left = this.splitContainer1.SplitterDistance;
+                    split2Top = this.splitContainer2.SplitterDistance;
+                    this.splitContainer1.SplitterDistance = this.splitContainer1.Panel1MinSize;
+                    this.splitContainer2.SplitterDistance = this.splitContainer2.Panel1MinSize;
+                }
+            }
+            catch (Exception ex)
+            {
+                this.AppendLog(ex.ToString());
+            }
+        }
+
+        private void ResizeCollectionDetailsRichTextBox()
+        {
+            try
+            {
+                if (this.splitContainer1.Panel2MinSize == this.splitContainer1.Panel2.Width)
+                {
+                    this.splitContainer1.SplitterDistance = this.splitContainer1.Width - split1Right;
+                }
+                else
+                {
+                    var tempLeft = this.splitContainer1.Width - this.splitContainer1.SplitterDistance;
+                    this.splitContainer1.SplitterDistance = this.splitContainer1.Width - this.splitContainer1.Panel2MinSize;
+                    split1Right = tempLeft;
+                }
+            }
+            catch (Exception ex)
+            {
+                this.AppendLog(ex.ToString());
+            }
+        }
+
+        private void splitContainer2_MouseDoubleClick(Object sender, MouseEventArgs e)
+        {
+            this.ResizeLogRichTextBox();
+        }
+
+        private void splitContainer1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            this.ResizeCollectionDetailsRichTextBox();
+        }
+
+        private void richTextBox2_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            this.ResizeLogRichTextBox();
+        }
+
+        private void richTextBox_WorkspaceCollection_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            this.ResizeCollectionDetailsRichTextBox();
+        }
+    }
+
+    public class MyConvertor : Newtonsoft.Json.JsonConverter
+    {
+        public override bool CanConvert(Type objectType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, Newtonsoft.Json.JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, Newtonsoft.Json.JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }
