@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 namespace VCloud.PowerBIManager
 {
@@ -36,30 +37,7 @@ namespace VCloud.PowerBIManager
             this.splitContainer1.Panel2MinSize = MINSize;
             this.splitContainer2.Panel1MinSize = MINSize;
             this.splitContainer2.Panel2MinSize = MINSize;
-
-            try
-            {
-                var convertor = new List<Newtonsoft.Json.JsonConverter>
-                {
-                    new MyConvertor()
-                };
-            }
-            catch (Exception ex)
-            {
-                this.AppendLog("MyConvertor \n" + ex.ToString());
-            }
-
-            try
-            {
-                var convertor = new List<Newtonsoft.Json.JsonConverter>
-                {
-                    new Microsoft.Rest.Serialization.Iso8601TimeSpanConverter()
-                };
-            }
-            catch (Exception ex)
-            {
-                this.AppendLog("Microsoft.Rest.Serialization.Iso8601TimeSpanConverter \n" + ex.ToString());
-            }
+            Logger.AddConsole(this.richTextBox2);
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -82,11 +60,11 @@ namespace VCloud.PowerBIManager
                 {
                     var collection = powerBIManager.GetWorkspaceCollection();
                     WorkspaceCollectionCache.AddOrUpdate(collection);
-                    this.AppendLog(String.Format("Info: add workspace collection successfully. name: {0}", collectionName));
+                    Logger.Info(String.Format("add workspace collection successfully. name: {0}", collectionName));
                 }
                 catch (Exception ex)
                 {
-                    this.AppendLog(String.Format("Error: add workspace collection failed. name: {0}, details: \n{1}", collectionName, ex));
+                    Logger.Error(String.Format("add workspace collection failed. name: {0}, details: \n{1}", collectionName, ex));
                 }
                 InitCollections();
             });
@@ -110,11 +88,11 @@ namespace VCloud.PowerBIManager
                     var powerBIManager = new PowerBIManager(currentCollection);
                     var result = powerBIManager.CreateWorkspace();
                     this.LoadWorkspaceCollectionDetail();
-                    this.AppendLog(String.Format("Info: create new workspace successfully, workspace collection Name: {0}, new workspace id {1}.", currentCollection.Name, result));
+                    Logger.Info(String.Format("create new workspace successfully, workspace collection Name: {0}, new workspace id {1}.", currentCollection.Name, result));
                 }
                 catch (Exception ex)
                 {
-                    this.AppendLog(String.Format("Error: create new workspace failed, workspace collection Name: {0}, details: \n{1}", currentCollection.Name, ex));
+                    Logger.Error(String.Format("create new workspace failed, workspace collection Name: {0}, details: \n{1}", currentCollection.Name, ex));
                 }
             });
         }
@@ -140,11 +118,11 @@ namespace VCloud.PowerBIManager
                     try
                     {
                         powerBI.UpdateConnection(workspaceId, datasetId, connStr, userName, pwd);
-                        this.AppendLog("Info: update connection string successfully.");
+                        Logger.Info("update connection string successfully.");
                     }
                     catch (Exception ex)
                     {
-                        this.AppendLog(String.Format("Error: update connection string failed, details: {0}", ex));
+                        Logger.Error(String.Format("update connection string failed, details: {0}", ex));
                     }
                 }
             });
@@ -168,12 +146,12 @@ namespace VCloud.PowerBIManager
                     try
                     {
                         powerBI.DeleteDataset(workspaceId, datasetId);
-                        this.AppendLog("Info: delete dataset successfully.");
+                        Logger.Info("delete dataset successfully.");
                         this.LoadWorkspaceCollectionDetail();
                     }
                     catch (Exception ex)
                     {
-                        this.AppendLog(String.Format("Error: delete dataset failed, details: {0}", ex));
+                        Logger.Error(String.Format("delete dataset failed, details: {0}", ex));
                     }
                 }
             });
@@ -201,12 +179,12 @@ namespace VCloud.PowerBIManager
                         {
                             powerBI.ImportPbix(workspaceId, datasetName, fileStream, out isOverwrite);
                         }
-                        this.AppendLog(String.Format("Info: {0} successfully.", isOverwrite ? "overwrite" : "import"));
+                        Logger.Info(String.Format("{0} successfully.", isOverwrite ? "overwrite" : "import"));
                         this.LoadWorkspaceCollectionDetail();
                     }
                     catch (Exception ex)
                     {
-                        this.AppendLog(String.Format("Error: {1} failed, details: {0}", ex, isOverwrite ? "overwrite" : "import"));
+                        Logger.Error(String.Format("{1} failed, details: {0}", ex, isOverwrite ? "overwrite" : "import"));
                     }
                 }
             });
@@ -244,6 +222,101 @@ namespace VCloud.PowerBIManager
             this.ShowPanel(true);
         }
 
+        private void comboBox3_SelectedIndexChanged(Object sender, EventArgs e)
+        {
+            var collection = this.GetCurrentCollection();
+            var datasets = new List<DataSet>();
+            if (collection != null && collection.Workspaces.Count > 0)
+            {
+                datasets = collection.Workspaces[this.comboBox3.SelectedIndex].DataSets;
+            }
+            this.SetDatasetSource(this.comboBox4, datasets);
+        }
+
+        private void comboBox5_SelectedIndexChanged(Object sender, EventArgs e)
+        {
+            var collection = this.GetCurrentCollection();
+            var datasets = new List<DataSet>();
+            if (collection != null && collection.Workspaces.Count > 0)
+            {
+                datasets = collection.Workspaces[this.comboBox5.SelectedIndex].DataSets;
+            }
+            this.SetDatasetSource(this.comboBox6, datasets);
+        }
+
+        private void comboBox7_SelectedIndexChanged(Object sender, EventArgs e)
+        {
+            var collection = this.GetCurrentCollection();
+            var reports = new List<Report>();
+            if (collection != null && collection.Workspaces.Count > 0)
+            {
+                reports = collection.Workspaces[this.comboBox7.SelectedIndex].Reports;
+            }
+            this.SetReportSource(this.comboBox8, reports);
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+            this.Process(() =>
+            {
+                AuthenticationResult common = null;
+                try
+                {
+                    common = AzureADHelper.GetCommonAzureAccessToken();
+                    Logger.Info("office 365 login successfully.");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(String.Format("office 365 login exception happend, details: {0}", ex));
+                    return;
+                }
+                finally
+                {
+                    this.ShowPanel(true);
+                }
+                try
+                {
+                    var accessToken = AzureADHelper.GetAzureAccessToken(common);
+                    var subscriptionId = AzureADHelper.GetSubscriptionId(common);
+                    var powerBIApiHelper = new PowerBIApiHelper(accessToken, subscriptionId);
+                    var collections = powerBIApiHelper.GetWorkspaceCollections();
+                    var result = new List<WorkspaceCollection>();
+                    foreach (var item in collections)
+                    {
+                        var accessKey = powerBIApiHelper.ListWorkspaceCollectionKey(item.Item1, item.Item2);
+                        var temp = new WorkspaceCollection
+                        {
+                            Name = item.Item2,
+                            AccessKey = accessKey
+                        };
+                        result.Add(temp);
+                    }
+                    WorkspaceCollectionCache.AddRange(result);
+                    Logger.Info("get all workspace collections successfully.");
+                    this.InitCollections();
+                }
+                catch (Exception exception)
+                {
+                    Logger.Error(String.Format("exception happened when invoking office 365 api , details: {0}", exception));
+                }
+            });
+        }
+
+        private void richTextBox2_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            this.ResizeLogRichTextBox();
+        }
+
+        private void richTextBox_WorkspaceCollection_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            this.ResizeCollectionDetailsRichTextBox();
+        }
+
+        private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Logger.RemoveConsole(this.richTextBox2);
+        }
+
         #region private method
 
         private void SetDatasetSource(ComboBox datasetCombobox, List<DataSet> dataSets)
@@ -272,18 +345,6 @@ namespace VCloud.PowerBIManager
             });
         }
 
-        private void AppendLog(String message)
-        {
-            message = "\n\n" + message + "\n\n";
-            this.richTextBox2.UIThread(() =>
-            {
-                this.richTextBox2.AppendText(message);
-                this.richTextBox2.SelectionStart = this.richTextBox2.TextLength;
-                this.richTextBox2.ScrollToCaret();
-            });
-            FileHelper.AppendLog(message);
-        }
-
         private void Process(Action action)
         {
             var totalTime = new TimeSpan(1000);
@@ -298,6 +359,7 @@ namespace VCloud.PowerBIManager
                     Thread.Sleep(1000);
                     this.panel3.Controls.Remove(tempLabel);
                 });
+                Logger.Print(String.Format("Time-consuming: {0}", totalTime.ToString("hh\\:mm\\:ss")));
             });
             actionThread.Start();
             var timerThread = new Thread(() =>
@@ -346,7 +408,7 @@ namespace VCloud.PowerBIManager
                 this.comboBox1.DisplayMember = "Name";
                 this.comboBox1.DataSource = source;
                 source.ResetBindings(true);
-
+                Logger.Info("load all collections name successfully");
             });
         }
 
@@ -393,11 +455,11 @@ namespace VCloud.PowerBIManager
                         });
                     }
                     source.ResetBindings(true);
-                    this.AppendLog(String.Format("Info: load collection details successfully, collectionName: {0}", currentCollection.Name));
+                    Logger.Info(String.Format("load collection details successfully, collectionName: {0}", currentCollection.Name));
                 }
                 catch (Exception ex)
                 {
-                    this.AppendLog(String.Format("Error: load collection details failed, collectionName: {0}, details: {1}", currentCollection.Name, ex));
+                    Logger.Error(String.Format("load collection details failed, collectionName: {0}, details: {1}", currentCollection.Name, ex));
                 }
             }
 
@@ -417,84 +479,6 @@ namespace VCloud.PowerBIManager
                 return dataSource[index];
             }
             return null;
-        }
-
-        #endregion private method
-
-        private void comboBox3_SelectedIndexChanged(Object sender, EventArgs e)
-        {
-            var collection = this.GetCurrentCollection();
-            var datasets = new List<DataSet>();
-            if (collection != null && collection.Workspaces.Count > 0)
-            {
-                datasets = collection.Workspaces[this.comboBox3.SelectedIndex].DataSets;
-            }
-            this.SetDatasetSource(this.comboBox4, datasets);
-        }
-
-        private void comboBox5_SelectedIndexChanged(Object sender, EventArgs e)
-        {
-            var collection = this.GetCurrentCollection();
-            var datasets = new List<DataSet>();
-            if (collection != null && collection.Workspaces.Count > 0)
-            {
-                datasets = collection.Workspaces[this.comboBox5.SelectedIndex].DataSets;
-            }
-            this.SetDatasetSource(this.comboBox6, datasets);
-        }
-
-        private void comboBox7_SelectedIndexChanged(Object sender, EventArgs e)
-        {
-            var collection = this.GetCurrentCollection();
-            var reports = new List<Report>();
-            if (collection != null && collection.Workspaces.Count > 0)
-            {
-                reports = collection.Workspaces[this.comboBox7.SelectedIndex].Reports;
-            }
-            this.SetReportSource(this.comboBox8, reports);
-        }
-
-        private void pictureBox1_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                var common = AzureADHelper.GetCommonAzureAccessToken();
-                this.ShowPanel(true);
-                this.AppendLog("Info: office 365 login successfully.");
-                this.Process(() =>
-                {
-                    try
-                    {
-                        var accessToken = AzureADHelper.GetAzureAccessToken(common);
-                        var subscriptionId = AzureADHelper.GetSubscriptionId(common);
-                        var powerBIApiHelper = new PowerBIApiHelper(accessToken, subscriptionId);
-                        var collections = powerBIApiHelper.GetWorkspaceCollections();
-                        var result = new List<WorkspaceCollection>();
-                        foreach (var item in collections)
-                        {
-                            var accessKey = powerBIApiHelper.ListWorkspaceCollectionKey(item.Item1, item.Item2);
-                            var temp = new WorkspaceCollection
-                            {
-                                Name = item.Item2,
-                                AccessKey = accessKey
-                            };
-                            result.Add(temp);
-                        }
-                        WorkspaceCollectionCache.AddRange(result);
-                        this.AppendLog("Info: get all workspace collections successfully.");
-                        this.InitCollections();
-                    }
-                    catch (Exception exception)
-                    {
-                        this.AppendLog(String.Format("Error: exception happened when invoking office 365 api , details: {0}", exception));
-                    }
-                });
-
-            }
-            catch (Exception ex)
-            {
-                this.AppendLog(String.Format("Error: office 365 login exception happend, details: {0}", ex));
-            }
         }
 
         private void ResizeLogRichTextBox()
@@ -517,7 +501,7 @@ namespace VCloud.PowerBIManager
             }
             catch (Exception ex)
             {
-                this.AppendLog(ex.ToString());
+                Logger.Error(ex.ToString());
             }
         }
 
@@ -538,36 +522,10 @@ namespace VCloud.PowerBIManager
             }
             catch (Exception ex)
             {
-                this.AppendLog(ex.ToString());
+                Logger.Error(ex.ToString());
             }
         }
 
-        private void richTextBox2_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            this.ResizeLogRichTextBox();
-        }
-
-        private void richTextBox_WorkspaceCollection_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            this.ResizeCollectionDetailsRichTextBox();
-        }
-    }
-
-    public class MyConvertor : Newtonsoft.Json.JsonConverter
-    {
-        public override bool CanConvert(Type objectType)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, Newtonsoft.Json.JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void WriteJson(JsonWriter writer, object value, Newtonsoft.Json.JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
+        #endregion private method
     }
 }

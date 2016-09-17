@@ -83,6 +83,7 @@
   <ItemGroup>
     <Compile Include="Common\AzureADHelper.cs" />
     <Compile Include="Common\ControlExtension.cs" />
+    <Compile Include="Common\Logger.cs" />
     <Compile Include="Common\PowerBIApiHelper.cs" />
     <Compile Include="Common\WorkspaceCollectionCache.cs" />
     <Compile Include="View\MainWindow.cs">

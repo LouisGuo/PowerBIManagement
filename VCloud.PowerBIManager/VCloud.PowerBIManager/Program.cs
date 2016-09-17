@@ -31,7 +31,7 @@ namespace VCloud.PowerBIManager
             }
             catch (Exception ex)
             {
-                FileHelper.AppendLog(ex.ToString());
+                Logger.Error(ex.ToString());
             }
             AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
             {

@@ -26,7 +26,7 @@ namespace VCloud.PowerBIManager
             }
             catch (Exception ex)
             {
-                FileHelper.AppendLog(String.Format("Error: open report viewer error, details: {0}", ex));
+                Logger.Error(String.Format("open report viewer error, details: {0}", ex));
             }
         }
     }
