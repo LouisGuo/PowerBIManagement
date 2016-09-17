@@ -10,28 +10,34 @@ namespace VCloud.PowerBIManager
 {
     static class Program
     {
+        private static Dictionary<String, Assembly> EmbeddedAssembly = new Dictionary<String, Assembly>();
+
         static Program()
         {
+            try
+            {
+                var currentAssembly = typeof(Program).Assembly;
+                var allAssembly = currentAssembly.GetManifestResourceNames().
+                    Where(s => s.EndsWith(".dll", StringComparison.OrdinalIgnoreCase));
+                foreach (var assemblyName in allAssembly)
+                {
+                    using (var stream = currentAssembly.GetManifestResourceStream(assemblyName))
+                    {
+                        var block = new Byte[stream.Length];
+                        stream.Read(block, 0, block.Length);
+                        EmbeddedAssembly[assemblyName] = Assembly.Load(block);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                FileHelper.AppendLog(ex.ToString());
+            }
             AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
             {
                 var thisAssembly = Assembly.GetExecutingAssembly();
-                FileHelper.AppendLog("Request Assembly---------------------------- " + args.Name);
                 var name = args.Name.Substring(0, args.Name.IndexOf(',')) + ".dll";
-                var resources = thisAssembly.GetManifestResourceNames().Where(s => s.EndsWith(name));
-                if (resources.Count() > 0)
-                {
-                    var resourceName = resources.First();
-                    using (var stream = thisAssembly.GetManifestResourceStream(resourceName))
-                    {
-                        if (stream == null) return null;
-                        var block = new byte[stream.Length];
-                        stream.Read(block, 0, block.Length);
-                        var result = Assembly.Load(block);
-                        FileHelper.AppendLog("Load Assembly successfully---------------------------- " + result.FullName);
-                        return result;
-                    }
-                }
-                return null;
+                return EmbeddedAssembly.FirstOrDefault(k => k.Key.EndsWith(name, StringComparison.OrdinalIgnoreCase)).Value;
             };
         }
 
