@@ -666,7 +666,6 @@
             this.splitContainer1.Size = new System.Drawing.Size(1215, 512);
             this.splitContainer1.SplitterDistance = 456;
             this.splitContainer1.TabIndex = 3;
-            this.splitContainer1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.splitContainer1_MouseDoubleClick);
             // 
             // splitContainer2
             // 
@@ -688,7 +687,6 @@
             this.splitContainer2.Size = new System.Drawing.Size(755, 512);
             this.splitContainer2.SplitterDistance = 274;
             this.splitContainer2.TabIndex = 0;
-            this.splitContainer2.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.splitContainer2_MouseDoubleClick);
             // 
             // panel3
             // 

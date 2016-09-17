@@ -13,8 +13,6 @@ using Newtonsoft.Json;
 
 namespace VCloud.PowerBIManager
 {
-
-
     public partial class MainWindow : Form
     {
         private const Int32 MINSize = 25;
@@ -41,7 +39,6 @@ namespace VCloud.PowerBIManager
 
             try
             {
-
                 var convertor = new List<Newtonsoft.Json.JsonConverter>
                 {
                     new MyConvertor()
@@ -49,13 +46,11 @@ namespace VCloud.PowerBIManager
             }
             catch (Exception ex)
             {
-
                 this.AppendLog("MyConvertor \n" + ex.ToString());
             }
 
             try
             {
-
                 var convertor = new List<Newtonsoft.Json.JsonConverter>
                 {
                     new Microsoft.Rest.Serialization.Iso8601TimeSpanConverter()
@@ -63,7 +58,6 @@ namespace VCloud.PowerBIManager
             }
             catch (Exception ex)
             {
-
                 this.AppendLog("Microsoft.Rest.Serialization.Iso8601TimeSpanConverter \n" + ex.ToString());
             }
         }
@@ -546,16 +540,6 @@ namespace VCloud.PowerBIManager
             {
                 this.AppendLog(ex.ToString());
             }
-        }
-
-        private void splitContainer2_MouseDoubleClick(Object sender, MouseEventArgs e)
-        {
-            this.ResizeLogRichTextBox();
-        }
-
-        private void splitContainer1_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            this.ResizeCollectionDetailsRichTextBox();
         }
 
         private void richTextBox2_MouseDoubleClick(object sender, MouseEventArgs e)
