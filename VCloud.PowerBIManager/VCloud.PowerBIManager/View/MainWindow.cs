@@ -350,7 +350,7 @@ namespace VCloud.PowerBIManager
             var totalTime = new TimeSpan(1000);
             var tempLabel = new Label();
             this.panel3.Controls.Add(tempLabel);
-            var actionThread = new Thread(() =>
+            ThreadPool.QueueUserWorkItem((state) =>
             {
                 action();
                 this.UIThread(() =>
@@ -361,8 +361,7 @@ namespace VCloud.PowerBIManager
                 });
                 Logger.Print(String.Format("Time-consuming: {0}", totalTime.ToString("hh\\:mm\\:ss")));
             });
-            actionThread.Start();
-            var timerThread = new Thread(() =>
+            ThreadPool.QueueUserWorkItem((state) =>
             {
                 while (!tempLabel.Equals("ready") && this.panel3.Controls.Contains(tempLabel))
                 {
@@ -374,7 +373,6 @@ namespace VCloud.PowerBIManager
                     Thread.Sleep(1000);
                 }
             });
-            timerThread.Start();
         }
 
         private void Panel3LabelChanged(object sender, ControlEventArgs e)
