@@ -105,8 +105,8 @@ namespace VCloud.PowerBIManager
                 var datasetId = String.Empty;
                 this.UIThread(() =>
                 {
-                    workspaceId = this.comboBox3.SelectedValue.ToString();
-                    datasetId = this.comboBox4.SelectedValue.ToString();
+                    workspaceId = this.comboBox3.SelectedValue as String;
+                    datasetId = this.comboBox4.SelectedValue as String;
                 });
                 var connStr = this.textBox7.Text;
                 var userName = this.textBox8.Text;
@@ -136,8 +136,8 @@ namespace VCloud.PowerBIManager
                 var datasetId = String.Empty;
                 this.UIThread(() =>
                 {
-                    workspaceId = this.comboBox5.SelectedValue.ToString();
-                    datasetId = this.comboBox6.SelectedValue.ToString();
+                    workspaceId = this.comboBox5.SelectedValue as String;
+                    datasetId = this.comboBox6.SelectedValue as String;
                 });
                 var collection = this.GetCurrentCollection();
                 if (collection != null)
@@ -164,7 +164,7 @@ namespace VCloud.PowerBIManager
                 var workspaceId = String.Empty;
                 this.UIThread(() =>
                 {
-                    workspaceId = this.comboBox2.SelectedValue.ToString();
+                    workspaceId = this.comboBox2.SelectedValue as String;
                 });
                 var datasetName = this.textBox5.Text;
                 var filePath = this.label6.Text;
@@ -195,8 +195,8 @@ namespace VCloud.PowerBIManager
             var collection = this.GetCurrentCollection();
             if (collection != null)
             {
-                var workspaceId = this.comboBox7.SelectedValue.ToString();
-                var reportId = this.comboBox8.SelectedValue.ToString();
+                var workspaceId = this.comboBox7.SelectedValue as String;
+                var reportId = this.comboBox8.SelectedValue as String;
                 var reportName = this.comboBox8.Text;
                 new ReportViewer(collection, workspaceId, reportId, reportName).Show();
             }
